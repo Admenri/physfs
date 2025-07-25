@@ -175,13 +175,6 @@ if(PHYSFS_BUILD_STATIC)
     add_library(physfs-static STATIC ${PHYSFS_SRCS})
     add_library(PhysFS::PhysFS-static ALIAS physfs-static)
     set_target_properties(physfs-static PROPERTIES EXPORT_NAME PhysFS-static)
-    # Don't rename this on Windows, since DLLs will also produce an import
-    #  library named "physfs.lib" which would conflict; Unix tend to like the
-    #  same library name with a different extension for static libs, but
-    #  Windows can just have a separate name.
-    if(NOT MSVC)
-        set_target_properties(physfs-static PROPERTIES OUTPUT_NAME "physfs")
-    endif()
     if(WINRT)
         # Ignore LNK4264 warnings; we don't author any WinRT components, just consume them, so we're okay in a static library.
 		set_target_properties(physfs-static PROPERTIES VS_WINRT_COMPONENT True)
