@@ -1802,6 +1802,12 @@ int PHYSFS_setRoot(const char *archive, const char *subdir)
     return 1;
 } /* PHYSFS_setRoot */
 
+extern const char* PHYSFS_zip_cryption_key;
+
+void PHYSFS_setZipPassword(const char *key)
+{
+    PHYSFS_zip_cryption_key = key;
+}
 
 static int doMount(PHYSFS_Io *io, const char *fname,
                    const char *mountPoint, int appendToPath)

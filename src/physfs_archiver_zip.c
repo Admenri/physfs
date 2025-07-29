@@ -12,6 +12,8 @@
 
 #if PHYSFS_SUPPORTS_ZIP
 
+const char* PHYSFS_zip_cryption_key = NULL;
+
 #include <errno.h>
 #include <time.h>
 
@@ -86,6 +88,7 @@ typedef struct
     PHYSFS_Io *io;            /* the i/o interface for this archive.    */
     int zip64;                /* non-zero if this is a Zip64 archive.   */
     int has_crypto;           /* non-zero if any entry uses encryption. */
+    const char* password;
 } ZIPinfo;
 
 /*
@@ -1460,6 +1463,9 @@ static void ZIP_closeArchive(void *opaque)
     if (info->io)
         info->io->destroy(info->io);
 
+    if (info->password)
+        allocator.Free((void*)info->password);
+
     __PHYSFS_DirTreeDeinit(&info->tree);
 
     allocator.Free(info);
@@ -1487,6 +1493,17 @@ static void *ZIP_openArchive(PHYSFS_Io *io, const char *name,
     memset(info, '\0', sizeof (ZIPinfo));
 
     info->io = io;
+
+    if (PHYSFS_zip_cryption_key)
+    {
+        size_t password_size = strlen(PHYSFS_zip_cryption_key);
+        info->password = (const char*) allocator.Malloc(password_size + 1);
+        memcpy((void*)info->password, (void*)PHYSFS_zip_cryption_key, password_size + 1);
+    }
+    else
+    {
+        info->password = NULL;
+    }
 
     if (!zip_parse_end_of_central_dir(info, &dstart, &cdir_ofs, &count))
         goto ZIP_openarchive_failed;
@@ -1546,20 +1563,9 @@ static PHYSFS_Io *ZIP_openRead(void *opaque, const char *filename)
     PHYSFS_uint8 *password = NULL;
 
     /* if not found, see if maybe "$PASSWORD" is appended. */
-    if ((!entry) && (info->has_crypto))
+    if (info->has_crypto)
     {
-        const char *ptr = strrchr(filename, '$');
-        if (ptr != NULL)
-        {
-            const size_t len = (size_t) (ptr - filename);
-            char *str = (char *) __PHYSFS_smallAlloc(len + 1);
-            BAIL_IF(!str, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-            memcpy(str, filename, len);
-            str[len] = '\0';
-            entry = zip_find_entry(info, str);
-            __PHYSFS_smallFree(str);
-            password = (PHYSFS_uint8 *) (ptr + 1);
-        } /* if */
+        password = (PHYSFS_uint8*) info->password;
     } /* if */
 
     BAIL_IF_ERRPASS(!entry, NULL);

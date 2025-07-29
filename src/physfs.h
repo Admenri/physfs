@@ -3921,6 +3921,7 @@ PHYSFS_DECL int PHYSFS_deregisterArchiver(const char *ext);
  */
 PHYSFS_DECL int PHYSFS_setRoot(const char *archive, const char *subdir);
 
+PHYSFS_DECL void PHYSFS_setZipPassword(const char *key);
 
 /* Everything above this line is part of the PhysicsFS 3.1 API. */
 
